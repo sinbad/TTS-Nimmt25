@@ -82,6 +82,43 @@ function gameSetup()
             })
         end
 	end, delaySum)
+
+    -- Order players hands at the same time
+    Wait.time(function() 
+        for _, colour in ipairs(getSeatedPlayers()) do 
+            local player = Player[colour]
+            print(colour .. " Hand Order")
+            local cardsInHand = player.getHandObjects()
+            local firstCardPos = cardsInHand[1].getPosition()
+            local lastCardPos = cardsInHand[#cardsInHand].getPosition()
+            
+            table.sort(cardsInHand, function(l, r) 
+                -- special cards won't convert, sort those to end
+                local lnum = tonumber(l.name)
+                local rnum = tonumber(r.name)
+                if lnum == nil then 
+                    return false
+                elseif rnum == nil then
+                    return true
+                else
+                    return lnum < rnum
+                end
+            end)
+
+            local cardInc = vector(
+                (lastCardPos.x - firstCardPos.x) / (#cardsInHand - 1),
+                (lastCardPos.y - firstCardPos.y) / (#cardsInHand - 1),
+                (lastCardPos.z - firstCardPos.z) / (#cardsInHand - 1))
+            for i, card in ipairs(cardsInHand) do
+                Wait.time(function()
+                    card.setPosition({0,-10,0})
+                    card.deal(1, colour)
+                    end, i*0.1)
+                        
+            end
+        end
+    end, delaySum)
+
     delaySum = delaySum + 1
 
     -- delete the remaining cloned decks, we don't need
