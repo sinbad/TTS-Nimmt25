@@ -117,6 +117,31 @@ function gameSetup()
         end
 	end, delaySum)
 
+
+    -- Spawn player bags
+	Wait.time(function()
+        for _, colour in ipairs(getSeatedPlayers()) do 
+            local player = Player[colour]
+            local xform = player.getHandTransform()
+
+            -- xform.position
+            -- xform.forward
+            -- xform.right
+
+            local bagPos = xform.position + (xform.forward * 5) + (xform.right * -4)
+
+            spawnObject({
+                type              = "bag",
+                position          = bagPos,
+                scale             = vector(0.85, 0.85, 0.85),
+                callback_function = function(obj) playerScoreBagSpawned(obj, colour) end,
+                snap_to_grid      = true -- important! otherwise can't drag cards in
+            })
+        end
+	end, delaySum)
+
+
+
     delaySum = delaySum + 0.2
 
     -- delete the remaining cloned decks, we don't need
@@ -124,6 +149,15 @@ function gameSetup()
     Wait.time(function() specialDeck.destruct() end, delaySum)
     delaySum = delaySum + 0.2
 
+end
+
+function onObjectEnterContainer(container, obj) 
+    print("Bag enter: " .. container.getName() .. " " .. obj.getName()) 
+end    
+
+function playerScoreBagSpawned(bag, colour)
+    bag.setName(colour .. "'s Scoring Bag")
+    bag.setColorTint(colour)
 end
 
 function showMasterDeckClicked()
