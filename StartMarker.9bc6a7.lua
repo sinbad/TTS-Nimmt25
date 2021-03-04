@@ -4,6 +4,8 @@ specialDeckGUID = "337158"
 menuMarkerGUID = "9bc6a7"
 tableCardMarkerGUID = "436d75"
 
+bagsToCounterMap = {}
+
 function onLoad()
     self.createButton({
         click_function = "gameSetup",
@@ -46,6 +48,7 @@ function gameSetup()
             object.destruct()
         end
     end
+    bagsToCounterMap = {}
 
     -- Clone decks, this is what lets us just destroy things
     local numbersDeck = origNumbersDeck.clone({
@@ -133,10 +136,6 @@ function gameSetup()
             local player = Player[colour]
             local xform = player.getHandTransform()
 
-            -- xform.position
-            -- xform.forward
-            -- xform.right
-
             local bagPos = xform.position + (xform.forward * 4) + (xform.right * -1)
             bagPos.y = 0.5
             -- need to calculate grid snapping here
@@ -158,24 +157,15 @@ function gameSetup()
             bagPos.x = gridorigin.x + cellX * Grid.sizeX
             bagPos.z = gridorigin.z + cellY * Grid.sizeY
 
-            local counterPos = bagPos + (xform.right * 3)
-
             spawnObject({
                 type              = "bag",
                 position          = bagPos,
+                rotation          = xform.rotation,
                 scale             = vector(1, 1, 1),
                 callback_function = function(obj) playerScoreBagSpawned(obj, colour) end,
                 snap_to_grid      = true 
             })
 
-            spawnObject({
-                type              = "Counter",
-                position          = counterPos,
-                rotation          = xform.rotation,
-                scale             = vector(1, 1, 1),
-                callback_function = function(obj) playerScoreCounterSpawned(obj, colour) end,
-                snap_to_grid      = false
-            })
         end
 	end, delaySum)
 
@@ -192,16 +182,46 @@ end
 
 function onObjectEnterContainer(container, obj) 
     print("Bag enter: " .. container.getName() .. " " .. obj.getName()) 
+
+    local counter = bagsToCounterMap[container.guid]
+    if counter ~= nil then
+        -- TODO: use value of card
+        counter.Counter.increment()
+    end
+
+end    
+
+function onObjectLeaveContainer(container, obj) 
+    print("Bag leave: " .. container.getName() .. " " .. obj.getName()) 
+
+    local counter = bagsToCounterMap[container.guid]
+    if counter ~= nil then
+        -- TODO: use value of card
+        counter.Counter.decrement()
+    end
 end    
 
 function playerScoreBagSpawned(bag, colour)
     bag.setName(colour .. "'s Scoring Bag")
     bag.setColorTint(colour)
+
+    local counterPos = bag.getPosition() + (bag.getTransformRight() * 3)
+
+    spawnObject({
+        type              = "Counter",
+        position          = counterPos,
+        rotation          = bag.getRotation(),
+        scale             = vector(1, 1, 1),
+        callback_function = function(obj) playerScoreCounterSpawned(obj, colour, bag) end,
+        snap_to_grid      = false
+    })
+
 end
 
-function playerScoreCounterSpawned(counter, colour)
+function playerScoreCounterSpawned(counter, colour, bag)
     counter.Counter.clear()
     counter.setLock(true)
+    bagsToCounterMap[bag.guid] = counter
 end
 
 function showMasterDeckClicked()
