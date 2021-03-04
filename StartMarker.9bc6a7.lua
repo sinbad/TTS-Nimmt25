@@ -70,7 +70,7 @@ function gameSetup()
     Wait.time(function() specialDeck.deal(3) end, delaySum)
     delaySum = delaySum + 1
 
-    -- Order players hands BEFORE dealing specials
+    -- Order players hands
     Wait.time(function() 
         for _, colour in ipairs(getSeatedPlayers()) do 
             local player = Player[colour]
@@ -127,6 +127,8 @@ function gameSetup()
 
     -- Spawn player bags
 	Wait.time(function()
+        local gridorigin = vector(Grid.offsetX - Grid.sizeX*0.5, 0, Grid.offsetY - Grid.sizeY*0.5)
+
         for _, colour in ipairs(getSeatedPlayers()) do 
             local player = Player[colour]
             local xform = player.getHandTransform()
@@ -135,14 +137,44 @@ function gameSetup()
             -- xform.forward
             -- xform.right
 
-            local bagPos = xform.position + (xform.forward * 5) + (xform.right * -4)
+            local bagPos = xform.position + (xform.forward * 4) + (xform.right * -1)
+            bagPos.y = 0.5
+            -- need to calculate grid snapping here
+            -- snap_to_grid doesn't always work on spawn and cards snap so bags need to
+            local cellX = 0
+            if xform.forward.x  > 0.9 then
+                cellX = math.ceil((bagPos.x - gridorigin.x) / Grid.sizeX)
+            else
+                cellX = math.floor((bagPos.x - gridorigin.x) / Grid.sizeX)
+            end
+
+            local cellY = 0
+            if xform.forward.z  > 0.9 then
+                cellY = math.ceil((bagPos.z - gridorigin.z) / Grid.sizeY)
+            else
+                cellY = math.floor((bagPos.z - gridorigin.z) / Grid.sizeY)
+            end
+
+            bagPos.x = gridorigin.x + cellX * Grid.sizeX
+            bagPos.z = gridorigin.z + cellY * Grid.sizeY
+
+            local counterPos = bagPos + (xform.right * 3)
 
             spawnObject({
                 type              = "bag",
                 position          = bagPos,
-                scale             = vector(0.85, 0.85, 0.85),
+                scale             = vector(1, 1, 1),
                 callback_function = function(obj) playerScoreBagSpawned(obj, colour) end,
-                snap_to_grid      = true -- important! otherwise can't drag cards in
+                snap_to_grid      = true 
+            })
+
+            spawnObject({
+                type              = "Counter",
+                position          = counterPos,
+                rotation          = xform.rotation,
+                scale             = vector(1, 1, 1),
+                callback_function = function(obj) playerScoreCounterSpawned(obj, colour) end,
+                snap_to_grid      = false
             })
         end
 	end, delaySum)
@@ -165,6 +197,11 @@ end
 function playerScoreBagSpawned(bag, colour)
     bag.setName(colour .. "'s Scoring Bag")
     bag.setColorTint(colour)
+end
+
+function playerScoreCounterSpawned(counter, colour)
+    counter.Counter.clear()
+    counter.setLock(true)
 end
 
 function showMasterDeckClicked()
