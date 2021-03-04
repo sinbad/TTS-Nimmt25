@@ -68,9 +68,9 @@ function gameSetup()
     -- Deal to players
     Wait.time(function() numbersDeck.deal(12) end, delaySum)
     Wait.time(function() specialDeck.deal(3) end, delaySum)
-    delaySum = delaySum + 1.5
+    delaySum = delaySum + 1
 
-    -- Order players hands
+    -- Order players hands BEFORE dealing specials
     Wait.time(function() 
         for _, colour in ipairs(getSeatedPlayers()) do 
             local player = Player[colour]
@@ -100,10 +100,13 @@ function gameSetup()
             -- So iterate range and de-ref
             for i=1,#cardsInHand do
                 local card = cardsInHand[i]
+                card.setPosition(hideCardsPos)
+            end
+            for i=1,#cardsInHand do
+                local card = cardsInHand[i]
                 Wait.time(function()
-                    card.setPosition(hideCardsPos)
                     card.deal(1, colour)
-                    end, i*0.1)
+                    end, i*0.2)
                         
             end
         end
