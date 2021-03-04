@@ -68,7 +68,7 @@ function gameSetup()
     -- Deal to players
     Wait.time(function() numbersDeck.deal(12) end, delaySum)
     Wait.time(function() specialDeck.deal(3) end, delaySum)
-    delaySum = delaySum + 0.5
+    delaySum = delaySum + 1
 
     -- Order players hands
     Wait.time(function() 
@@ -83,12 +83,16 @@ function gameSetup()
                 -- special cards won't convert, sort those to end
                 local lnum = tonumber(l.getName())
                 local rnum = tonumber(r.getName())
-                if lnum == nil then 
-                    return false
-                elseif rnum == nil then
-                    return true
+                if lnum == nil and rnum == nil then -- both specials
+                    return l.getName() < l.getName() -- must have stable ordering
                 else
-                    return lnum < rnum
+                    if lnum == nil then
+                        return false -- swap when special is to the left of non-special
+                    elseif rnum == nil then
+                        return true
+                    else
+                        return lnum < rnum
+                    end
                 end
             end)
 
