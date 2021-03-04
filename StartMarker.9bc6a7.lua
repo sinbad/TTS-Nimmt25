@@ -52,11 +52,6 @@ function gameSetup()
     -- Do everything with a 1 second delay to make sure we wait for previous
     delaySum = 0
 
-    Wait.time(function() numbersDeck.reset() end, delaySum)
-    delaySum = delaySum + 1
-    Wait.time(function() specialDeck.reset() end, delaySum)
-    delaySum = delaySum + 1
-
     -- shuffle both at the same time
     Wait.time(function() numbersDeck.shuffle() end, delaySum)
     Wait.time(function() specialDeck.shuffle() end, delaySum)
