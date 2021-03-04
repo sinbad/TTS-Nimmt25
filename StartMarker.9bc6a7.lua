@@ -181,23 +181,25 @@ function gameSetup()
 end
 
 function onObjectEnterContainer(container, obj) 
-    print("Bag enter: " .. container.getName() .. " " .. obj.getName()) 
 
-    local counter = bagsToCounterMap[container.guid]
-    if counter ~= nil then
-        -- TODO: use value of card
-        counter.Counter.increment()
+    -- ARGH it's possible to add nested decks
+    -- Cascading for calc doesn't seem to work
+    -- Need to re-add the individual cards instead
+
+    if obj.type == "Card" then        
+        local counter = bagsToCounterMap[container.guid]
+        if counter ~= nil then
+            counter.Counter.setValue(counter.Counter.getValue() + getCardScoreFromName(obj.getName()))
+        end
     end
-
 end    
 
 function onObjectLeaveContainer(container, obj) 
-    print("Bag leave: " .. container.getName() .. " " .. obj.getName()) 
-
-    local counter = bagsToCounterMap[container.guid]
-    if counter ~= nil then
-        -- TODO: use value of card
-        counter.Counter.decrement()
+    if obj.type == "Card" then        
+        local counter = bagsToCounterMap[container.guid]
+        if counter ~= nil then
+            counter.Counter.setValue(counter.Counter.getValue() - getCardScoreFromName(obj.getName()))
+        end
     end
 end    
 
@@ -279,4 +281,25 @@ function hideMasterDeck(allowUnhiding)
     end
 
 
+end
+
+function getCardScoreFromName(cardName)
+    local num = tonumber(cardName)
+    if num == nil then 
+        return 0
+    end
+
+    if num % 11 == 0 then 
+        return 5
+    end
+
+    if num % 10 == 0 then 
+        return 3
+    end
+
+    if num % 5 == 0 then 
+        return 2
+    end
+
+    return 1
 end
