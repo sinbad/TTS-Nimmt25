@@ -2,6 +2,7 @@
 numbersDeckGUID = "356100"
 specialDeckGUID = "337158"
 menuMarkerGUID = "9bc6a7"
+tableCardMarkerGUID = "436d75"
 
 function onLoad()
     self.createButton({
@@ -22,6 +23,10 @@ function onLoad()
 
     origNumbersDeck = getObjectFromGUID(numbersDeckGUID)
     origSpecialDeck = getObjectFromGUID(specialDeckGUID)
+    tableCardMarker = getObjectFromGUID(tableCardMarkerGUID)
+    allPlayers = {"White", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink"}
+
+    tableCardMarker.setInvisibleTo(allPlayers)
 
     -- Flip this boolean if you want to be able to edit the master decks
     hideMasterDeck(false)
@@ -34,18 +39,21 @@ function gameSetup()
     -- Clear every card from the table except the original decks
     local allObjects = getAllObjects()
     for index, object in ipairs(allObjects) do
-        if not (object.guid == numbersDeckGUID or object.guid == specialDeckGUID or object.guid == menuMarkerGUID) then
+        if not (object.guid == numbersDeckGUID or 
+            object.guid == specialDeckGUID or 
+            object.guid == menuMarkerGUID or
+            object.guid == tableCardMarkerGUID) then
             object.destruct()
         end
     end
 
     -- Clone decks, this is what lets us just destroy things
     local numbersDeck = origNumbersDeck.clone({
-        position     = {3, 3, 0},
+        position     = {3, 3, 10},
         snap_to_grid = true,
     })
     local specialDeck = origSpecialDeck.clone({
-        position     = {6, 3, 0},
+        position     = {6, 3, 10},
         snap_to_grid = true,
     })
 
@@ -57,9 +65,23 @@ function gameSetup()
     Wait.time(function() specialDeck.shuffle() end, delaySum)
     delaySum = delaySum + 1
 
+    -- Deal to players
     Wait.time(function() numbersDeck.deal(12) end, delaySum)
     delaySum = delaySum + 1
     Wait.time(function() specialDeck.deal(3) end, delaySum)
+    delaySum = delaySum + 1
+
+    -- deal to table
+	Wait.time(function()
+		local basePos = tableCardMarker.getPosition()
+		for i=1, 4 do
+			local pos = {basePos.x, basePos.y, basePos.z - i*3.46}
+            numbersDeck.takeObject({
+                position          = pos,
+                flip              = true
+            })
+        end
+	end, delaySum)
     delaySum = delaySum + 1
 
     -- delete the remaining cloned decks, we don't need
@@ -100,8 +122,8 @@ end
 
 function hideMasterDeck(allowUnhiding)
     -- Make invisible to everyone except admin (Black)
-    origNumbersDeck.setInvisibleTo({"White", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink"})
-    origSpecialDeck.setInvisibleTo({"White", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink"})
+    origNumbersDeck.setInvisibleTo(allPlayers)
+    origSpecialDeck.setInvisibleTo(allPlayers)
 
     if (#self.getButtons() > 1) then 
         self.removeButton(1)
