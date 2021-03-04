@@ -63,12 +63,12 @@ function gameSetup()
     -- shuffle both at the same time
     Wait.time(function() numbersDeck.shuffle() end, delaySum)
     Wait.time(function() specialDeck.shuffle() end, delaySum)
-    delaySum = delaySum + 0.2
+    delaySum = delaySum + 1
 
     -- Deal to players
     Wait.time(function() numbersDeck.deal(12) end, delaySum)
     Wait.time(function() specialDeck.deal(3) end, delaySum)
-    delaySum = delaySum + 1
+    delaySum = delaySum + 1.5
 
     -- Order players hands
     Wait.time(function() 
