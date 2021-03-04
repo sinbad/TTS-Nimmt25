@@ -77,6 +77,8 @@ function gameSetup()
             print(colour .. " Hand Order")
             local cardsInHand = player.getHandObjects()
             
+            local hideCardsPos = cardsInHand[1].getPosition()
+            hideCardsPos.y = hideCardsPos.y - 5
             table.sort(cardsInHand, function(l, r) 
                 -- special cards won't convert, sort those to end
                 local lnum = tonumber(l.getName())
@@ -95,7 +97,7 @@ function gameSetup()
             for i=1,#cardsInHand do
                 local card = cardsInHand[i]
                 Wait.time(function()
-                    card.setPosition({0,-10,0})
+                    card.setPosition(hideCardsPos)
                     card.deal(1, colour)
                     end, i*0.1)
                         
