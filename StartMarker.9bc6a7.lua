@@ -23,7 +23,8 @@ function onLoad()
     origNumbersDeck = getObjectFromGUID(numbersDeckGUID)
     origSpecialDeck = getObjectFromGUID(specialDeckGUID)
 
-    hideMasterDeck()
+    -- Flip this boolean if you want to be able to edit the master decks
+    hideMasterDeck(false)
 
 
 end
@@ -38,9 +39,7 @@ function gameSetup()
         end
     end
 
-
-
-    -- Clone decks
+    -- Clone decks, this is what lets us just destroy things
     local numbersDeck = origNumbersDeck.clone({
         position     = {3, 3, 0},
         snap_to_grid = true,
@@ -75,7 +74,7 @@ function gameSetup()
 
 end
 
-function showMasterDeck()
+function showMasterDeckClicked()
     origNumbersDeck.setInvisibleTo({})
     origSpecialDeck.setInvisibleTo({})
 
@@ -83,7 +82,7 @@ function showMasterDeck()
         self.removeButton(1)
     end
     self.createButton({
-        click_function = "hideMasterDeck",
+        click_function = "hideMasterDeckClicked",
         function_owner = self,
         label          = "Hide Master",
         position       = {-12, 0, 0},
@@ -100,7 +99,11 @@ function showMasterDeck()
 
 end
 
-function hideMasterDeck()
+function hideMasterDeckClicked()
+    hideMasterDeck(true)
+end
+
+function hideMasterDeck(allowUnhiding)
     -- Make invisible to everyone except admin (Black)
     origNumbersDeck.setInvisibleTo({"White", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink"})
     origSpecialDeck.setInvisibleTo({"White", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink"})
@@ -108,21 +111,22 @@ function hideMasterDeck()
     if (#self.getButtons() > 1) then 
         self.removeButton(1)
     end
-    self.createButton({
-        click_function = "showMasterDeck",
-        function_owner = self,
-        label          = "Show Master",
-        position       = {-12, 0, 0},
-        rotation       = {0,0,0},
-        rotation       = {0,180,0}, 
-        height         = 350, 
-        width          = 2000,
-        font_size      = 250, 
-        scale          = {1.5, 1.5, 1.5},
-        color          = {0.5,0.5,0}, 
-        font_color     = {1,1,1},
-        
-    })
+    if allowUnhiding then
+        self.createButton({
+            click_function = "showMasterDeckClicked",
+            function_owner = self,
+            label          = "Show Master",
+            position       = {-12, 0, 0},
+            rotation       = {0,0,0},
+            rotation       = {0,180,0}, 
+            height         = 350, 
+            width          = 2000,
+            font_size      = 250, 
+            scale          = {1.5, 1.5, 1.5},
+            color          = {0.5,0.5,0}, 
+            font_color     = {1,1,1},    
+        })
+    end
 
 
 end
