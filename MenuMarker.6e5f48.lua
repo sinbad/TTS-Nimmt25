@@ -2,6 +2,7 @@ numbersDeckGUID = "356100"
 specialDeckGUID = "337158"
 menuMarkerGUID = "6e5f48"
 tableCardMarkerGUID = "436d75"
+adminMarkerGUID = "3009b8"
 
 bagsToCounterMap = {}
 numberOfGames = 0
@@ -27,10 +28,6 @@ function onLoad()
     origNumbersDeck = getObjectFromGUID(numbersDeckGUID)
     origSpecialDeck = getObjectFromGUID(specialDeckGUID)
     tableCardMarker = getObjectFromGUID(tableCardMarkerGUID)
-    allPlayers = {"White", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink"}
-
-    -- Flip this boolean if you want to be able to edit the master decks/markers
-    hideMasters()
 
 
 end
@@ -101,7 +98,8 @@ function resetAndDealNewGame()
         if not (object.guid == numbersDeckGUID or 
             object.guid == specialDeckGUID or 
             object.guid == menuMarkerGUID or
-            object.guid == tableCardMarkerGUID) then
+            object.guid == tableCardMarkerGUID or
+            object.guid == adminMarkerGUID) then
             object.destruct()
         end
     end
@@ -301,44 +299,6 @@ function playerScoreCounterSpawned(counter, colour, bag)
     counter.Counter.clear()
     counter.setLock(true)
     bagsToCounterMap[bag.guid] = counter
-end
-
-function showMastersClicked()
-    origNumbersDeck.setInvisibleTo({})
-    origSpecialDeck.setInvisibleTo({})
-    tableCardMarker.setInvisibleTo({})
-
-    if (#self.getButtons() > 1) then 
-        self.removeButton(1)
-    end
-    self.createButton({
-        click_function = "hideMastersClicked",
-        function_owner = self,
-        label          = "Hide Master",
-        position       = {-12, 0, 0},
-        rotation       = {0,0,0},
-        rotation       = {0,180,0}, 
-        height         = 350, 
-        width          = 2000,
-        font_size      = 250, 
-        scale          = {1.5, 1.5, 1.5},
-        color          = {0.5,0.5,0}, 
-        font_color     = {1,1,1},
-        
-    })
-
-end
-
-function hideMastersClicked()
-    hideMasters(true)
-end
-
-function hideMasters()
-    -- Make invisible to everyone except admin (Black)
-    origNumbersDeck.setInvisibleTo(allPlayers)
-    origSpecialDeck.setInvisibleTo(allPlayers)
-    tableCardMarker.setInvisibleTo(allPlayers)
-
 end
 
 function getCardScoreFromName(cardName)
