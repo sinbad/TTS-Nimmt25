@@ -4,20 +4,22 @@ menuMarkerGUID = "6e5f48"
 tableCardMarkerGUID = "436d75"
 
 bagsToCounterMap = {}
+numberOfGames = 0
 
 function onLoad()
     self.createButton({
         click_function = "gameSetup",
         function_owner = self,
-        label          = "Deal New Game",
-        position       = {0, 0.1, 0},
+        label          = "New Game",
+        position       = {0, 0.25, 0},
         rotation       = {0,0,0},
         rotation       = {0,180,0}, 
         height         = 350, 
-        width          = 2000,
+        width          = 1700,
         font_size      = 250, 
         scale          = {3, 3, 3},
-        color          = {0.5,0,0}, 
+        color          = {0.45,0.35,0.65}, 
+        hover_color    = {0.65, 0.45, 0.85},
         font_color     = {1,1,1},
         
     })
@@ -28,13 +30,71 @@ function onLoad()
     allPlayers = {"White", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink"}
 
     -- Flip this boolean if you want to be able to edit the master decks/markers
-    hideMasters(true)
+    hideMasters()
 
 
 end
 
 function gameSetup()
 
+    if numberOfGames > 0 then
+        -- confirmation on 2nd game onwards
+        promptConfirmNewGame()
+    else
+        resetAndDealNewGame()
+    end
+
+end
+
+function promptConfirmNewGame()
+    self.createButton({
+        click_function = "resetAndDealNewGame",
+        function_owner = self,
+        label          = "Confirm",
+        position       = {-3.5, 0.25, -3},
+        rotation       = {0,0,0},
+        rotation       = {0,180,0}, 
+        height         = 350, 
+        width          = 1000,
+        font_size      = 250, 
+        scale          = {3, 3, 3},
+        color          = {0, 0.65,0}, 
+        hover_color    = {0, 1, 0},
+        font_color     = {1,1,1},
+        
+    })
+
+    self.createButton({
+        click_function = "removeConfirmNewGameButtons",
+        function_owner = self,
+        label          = "Cancel",
+        position       = {3.5, 0.25, -3},
+        rotation       = {0,0,0},
+        rotation       = {0,180,0}, 
+        height         = 350, 
+        width          = 1000,
+        font_size      = 250, 
+        scale          = {3, 3, 3},
+        color          = {0.65,0,0}, 
+        hover_color    = {1, 0, 0},
+        font_color     = {1,1,1},
+        
+    })
+    
+end
+
+function removeConfirmNewGameButtons()
+    if #self.getButtons() > 1 then
+        self.removeButton(2)
+        self.removeButton(1)
+    end
+end
+
+function resetAndDealNewGame()
+
+    removeConfirmNewGameButtons()
+
+    numberOfGames = numberOfGames + 1
     -- Clear every card from the table except the original decks
     local allObjects = getAllObjects()
     for index, object in ipairs(allObjects) do
@@ -273,32 +333,11 @@ function hideMastersClicked()
     hideMasters(true)
 end
 
-function hideMasters(allowUnhiding)
+function hideMasters()
     -- Make invisible to everyone except admin (Black)
     origNumbersDeck.setInvisibleTo(allPlayers)
     origSpecialDeck.setInvisibleTo(allPlayers)
     tableCardMarker.setInvisibleTo(allPlayers)
-
-    if (#self.getButtons() > 1) then 
-        self.removeButton(1)
-    end
-    if allowUnhiding then
-        self.createButton({
-            click_function = "showMastersClicked",
-            function_owner = self,
-            label          = "Show Master",
-            position       = {-15, 0.1, 0},
-            rotation       = {0,0,0},
-            rotation       = {0,180,0}, 
-            height         = 350, 
-            width          = 2000,
-            font_size      = 250, 
-            scale          = {3,3,3},
-            color          = {0.5,0.5,0}, 
-            font_color     = {1,1,1},    
-        })
-    end
-
 
 end
 
