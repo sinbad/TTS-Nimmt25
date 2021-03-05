@@ -180,26 +180,46 @@ function gameSetup()
 
 end
 
-function onObjectEnterContainer(container, obj) 
+function calcScore(deltaObj)
 
     -- ARGH it's possible to add nested decks
-    -- Cascading for calc doesn't seem to work
-    -- Need to re-add the individual cards instead
 
-    if obj.type == "Card" then        
-        local counter = bagsToCounterMap[container.guid]
-        if counter ~= nil then
-            counter.Counter.setValue(counter.Counter.getValue() + getCardScoreFromName(obj.getName()))
+
+    local score = 0
+    if deltaObj ~= nil then
+        if deltaObj.name == "Deck" then
+            -- Nested deck (grouped cards)
+            cards = deltaObj.getObjects()
+            for key,card in pairs(cards) do
+                -- very important to use [""] access pattern to properties
+                -- and not .name or .getName() which both fail
+                -- these aren't types but plain tables
+                score = score + getCardScoreFromName(card["name"])
+            end
+        else 
+            -- In this case we *must* use getName() because .name is "Card" UGGHH
+            score = score + getCardScoreFromName(deltaObj.getName())
         end
     end
+    return score
+end
+
+
+function onObjectEnterContainer(container, obj) 
+
+    local counter = bagsToCounterMap[container.guid]
+    if counter ~= nil then
+        local score = calcScore(obj)
+        counter.Counter.setValue(counter.Counter.getValue() + score)    
+    end
+
 end    
 
 function onObjectLeaveContainer(container, obj) 
-    if obj.type == "Card" then        
-        local counter = bagsToCounterMap[container.guid]
-        if counter ~= nil then
-            counter.Counter.setValue(counter.Counter.getValue() - getCardScoreFromName(obj.getName()))
-        end
+    local counter = bagsToCounterMap[container.guid]
+    if counter ~= nil then
+        local score = calcScore(obj)
+        counter.Counter.setValue(counter.Counter.getValue() - score)
     end
 end    
 
@@ -289,6 +309,10 @@ function getCardScoreFromName(cardName)
         return 0
     end
 
+    if num == 55 then
+        return 7
+    end
+    
     if num % 11 == 0 then 
         return 5
     end
