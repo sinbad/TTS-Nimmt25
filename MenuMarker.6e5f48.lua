@@ -1,7 +1,6 @@
-
 numbersDeckGUID = "356100"
 specialDeckGUID = "337158"
-menuMarkerGUID = "9bc6a7"
+menuMarkerGUID = "6e5f48"
 tableCardMarkerGUID = "436d75"
 
 bagsToCounterMap = {}
@@ -11,13 +10,13 @@ function onLoad()
         click_function = "gameSetup",
         function_owner = self,
         label          = "Deal New Game",
-        position       = {-3, 0, 0},
+        position       = {0, 0.1, 0},
         rotation       = {0,0,0},
         rotation       = {0,180,0}, 
         height         = 350, 
         width          = 2000,
         font_size      = 250, 
-        scale          = {1.5, 1.5, 1.5},
+        scale          = {3, 3, 3},
         color          = {0.5,0,0}, 
         font_color     = {1,1,1},
         
@@ -28,10 +27,8 @@ function onLoad()
     tableCardMarker = getObjectFromGUID(tableCardMarkerGUID)
     allPlayers = {"White", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink"}
 
-    tableCardMarker.setInvisibleTo(allPlayers)
-
-    -- Flip this boolean if you want to be able to edit the master decks
-    hideMasterDeck(false)
+    -- Flip this boolean if you want to be able to edit the master decks/markers
+    hideMasters(true)
 
 
 end
@@ -52,11 +49,11 @@ function gameSetup()
 
     -- Clone decks, this is what lets us just destroy things
     local numbersDeck = origNumbersDeck.clone({
-        position     = {3, 3, 10},
+        position     = {3, 3, 7},
         snap_to_grid = true,
     })
     local specialDeck = origSpecialDeck.clone({
-        position     = {6, 3, 10},
+        position     = {6, 3, 7},
         snap_to_grid = true,
     })
 
@@ -246,15 +243,16 @@ function playerScoreCounterSpawned(counter, colour, bag)
     bagsToCounterMap[bag.guid] = counter
 end
 
-function showMasterDeckClicked()
+function showMastersClicked()
     origNumbersDeck.setInvisibleTo({})
     origSpecialDeck.setInvisibleTo({})
+    tableCardMarker.setInvisibleTo({})
 
     if (#self.getButtons() > 1) then 
         self.removeButton(1)
     end
     self.createButton({
-        click_function = "hideMasterDeckClicked",
+        click_function = "hideMastersClicked",
         function_owner = self,
         label          = "Hide Master",
         position       = {-12, 0, 0},
@@ -271,30 +269,31 @@ function showMasterDeckClicked()
 
 end
 
-function hideMasterDeckClicked()
-    hideMasterDeck(true)
+function hideMastersClicked()
+    hideMasters(true)
 end
 
-function hideMasterDeck(allowUnhiding)
+function hideMasters(allowUnhiding)
     -- Make invisible to everyone except admin (Black)
     origNumbersDeck.setInvisibleTo(allPlayers)
     origSpecialDeck.setInvisibleTo(allPlayers)
+    tableCardMarker.setInvisibleTo(allPlayers)
 
     if (#self.getButtons() > 1) then 
         self.removeButton(1)
     end
     if allowUnhiding then
         self.createButton({
-            click_function = "showMasterDeckClicked",
+            click_function = "showMastersClicked",
             function_owner = self,
             label          = "Show Master",
-            position       = {-12, 0, 0},
+            position       = {-15, 0.1, 0},
             rotation       = {0,0,0},
             rotation       = {0,180,0}, 
             height         = 350, 
             width          = 2000,
             font_size      = 250, 
-            scale          = {1.5, 1.5, 1.5},
+            scale          = {3,3,3},
             color          = {0.5,0.5,0}, 
             font_color     = {1,1,1},    
         })
@@ -312,7 +311,7 @@ function getCardScoreFromName(cardName)
     if num == 55 then
         return 7
     end
-    
+
     if num % 11 == 0 then 
         return 5
     end
