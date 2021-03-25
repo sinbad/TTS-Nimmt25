@@ -1,18 +1,19 @@
 numbersDeckGUID = "356100"
-specialDeckGUID = "337158"
+specialDeckGUID = "32996f"
 menuMarkerGUID = "6e5f48"
 tableCardMarkerGUID = "436d75"
 adminMarkerGUID = "3009b8"
 
 bagsToCounterMap = {}
 numberOfGames = 0
+currentSpecialDeck = nil
 
 function onLoad()
     self.createButton({
         click_function = "gameSetup",
         function_owner = self,
         label          = "New Game",
-        position       = {0, 0.25, 0},
+        position       = {6, 0.25, 0},
         rotation       = {0,0,0},
         rotation       = {0,180,0}, 
         height         = 350, 
@@ -24,15 +25,32 @@ function onLoad()
         font_color     = {1,1,1},
         
     })
+    self.createButton({
+        click_function = "secondRound",
+        function_owner = self,
+        label          = "Second Round",
+        position       = {-6, 0.25, 0},
+        rotation       = {0,0,0},
+        rotation       = {0,180,0}, 
+        height         = 350, 
+        width          = 1700,
+        font_size      = 250, 
+        scale          = {3, 3, 3},
+        color          = {0.55,0.35,0.45}, 
+        hover_color    = {0.75, 0.45, 0.65},
+        font_color     = {1,1,1},
+        
+    })
 
     origNumbersDeck = getObjectFromGUID(numbersDeckGUID)
     origSpecialDeck = getObjectFromGUID(specialDeckGUID)
     tableCardMarker = getObjectFromGUID(tableCardMarkerGUID)
 
-
 end
 
 function gameSetup()
+
+    removeConfirmButtons()
 
     if numberOfGames > 0 then
         -- confirmation on 2nd game onwards
@@ -43,12 +61,14 @@ function gameSetup()
 
 end
 
-function promptConfirmNewGame()
+function secondRound()
+    removeConfirmButtons()
+
     self.createButton({
-        click_function = "resetAndDealNewGame",
+        click_function = "confirmSecondRound",
         function_owner = self,
         label          = "Confirm",
-        position       = {-3.5, 0.25, -3},
+        position       = {-4, 1, -3},
         rotation       = {0,0,0},
         rotation       = {0,180,0}, 
         height         = 350, 
@@ -62,10 +82,10 @@ function promptConfirmNewGame()
     })
 
     self.createButton({
-        click_function = "removeConfirmNewGameButtons",
+        click_function = "removeConfirmButtons",
         function_owner = self,
         label          = "Cancel",
-        position       = {3.5, 0.25, -3},
+        position       = {-10.5, 1, -3},
         rotation       = {0,0,0},
         rotation       = {0,180,0}, 
         height         = 350, 
@@ -80,16 +100,55 @@ function promptConfirmNewGame()
     
 end
 
-function removeConfirmNewGameButtons()
-    if #self.getButtons() > 1 then
-        self.removeButton(2)
-        self.removeButton(1)
+function promptConfirmNewGame()
+    self.createButton({
+        click_function = "resetAndDealNewGame",
+        function_owner = self,
+        label          = "Confirm",
+        position       = {10.5, 1, -3},
+        rotation       = {0,0,0},
+        rotation       = {0,180,0}, 
+        height         = 350, 
+        width          = 1000,
+        font_size      = 250, 
+        scale          = {3, 3, 3},
+        color          = {0, 0.65,0}, 
+        hover_color    = {0, 1, 0},
+        font_color     = {1,1,1},
+        
+    })
+
+    self.createButton({
+        click_function = "removeConfirmButtons",
+        function_owner = self,
+        label          = "Cancel",
+        position       = {4, 1, -3},
+        rotation       = {0,0,0},
+        rotation       = {0,180,0}, 
+        height         = 350, 
+        width          = 1000,
+        font_size      = 250, 
+        scale          = {3, 3, 3},
+        color          = {0.65,0,0}, 
+        hover_color    = {1, 0, 0},
+        font_color     = {1,1,1},
+        
+    })
+    
+end
+
+function removeConfirmButtons()
+    -- Iterate backwards for stability
+    local buttons = self.getButtons();
+    for i = #buttons, 1, -1 do
+        local button = buttons[i]
+        if (button["label"] == "Confirm" or button["label"] == "Cancel") then
+            self.removeButton(button.index)
+        end
     end
 end
 
 function resetAndDealNewGame()
-
-    removeConfirmNewGameButtons()
 
     numberOfGames = numberOfGames + 1
     -- Clear every card from the table except the original decks
@@ -107,13 +166,14 @@ function resetAndDealNewGame()
 
     -- Clone decks, this is what lets us just destroy things
     local numbersDeck = origNumbersDeck.clone({
-        position     = {3, 3, 7},
+        position     = {-19.5, 3, 0},
         snap_to_grid = true,
     })
     local specialDeck = origSpecialDeck.clone({
-        position     = {6, 3, 7},
+        position     = {-17, 3, 0},
         snap_to_grid = true,
     })
+    currentSpecialDeck = specialDeck
 
     -- Do everything with a 1 second delay to make sure we wait for previous
     delaySum = 0
@@ -234,6 +294,33 @@ function resetAndDealNewGame()
     --Wait.time(function() specialDeck.destruct() end, delaySum)
     delaySum = delaySum + 0.2
 
+end
+
+function confirmSecondRound()
+    -- Save round 1 player bag scores somewhere
+    -- Bags will need a new display for that and total score
+    -- Remove regular cards
+    -- Remove discarded special cards
+    -- KEEP special cards in hand
+    -- Spawn new numbers deck & deal
+    -- Deal 3 more specials from EXISTING deck
+
+
+    -- Clear every card from the table except the special deck and special cards IN HANDs
+    local allObjects = getAllObjects()
+    for index, object in ipairs(allObjects) do
+        if not (object.guid == numbersDeckGUID or 
+            object.guid == specialDeckGUID or 
+            object.guid == menuMarkerGUID or
+            object.guid == tableCardMarkerGUID or
+            object.guid == adminMarkerGUID or
+            object == currentSpecialDeck or
+            (object.hasTag("Special") and string.len(object.held_by_color) > 0)) then
+            object.destruct()
+        end
+    end
+
+    
 end
 
 function calcScore(deltaObj)

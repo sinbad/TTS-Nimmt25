@@ -2,7 +2,7 @@
 
 adminMarkerGUID = "3009b8"
 numbersDeckGUID = "356100"
-specialDeckGUID = "337158"
+specialDeckGUID = "32996f"
 tableCardMarkerGUID = "436d75"
 allPlayers = {"White", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink", "Grey"}
 
