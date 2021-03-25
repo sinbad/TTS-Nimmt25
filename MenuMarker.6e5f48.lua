@@ -149,6 +149,7 @@ function removeConfirmButtons()
 end
 
 function resetAndDealNewGame()
+    removeConfirmButtons()
 
     numberOfGames = numberOfGames + 1
     -- Clear every card from the table except the original decks
@@ -296,17 +297,40 @@ function resetAndDealNewGame()
 
 end
 
+function IsCardInHand(object)
+    for _, colour in ipairs(getSeatedPlayers()) do 
+        local player = Player[colour]
+        local cardsInHand = player.getHandObjects()
+        for i=1,#cardsInHand do
+            local card = cardsInHand[i]
+            if card.guid == object.guid then
+                return true
+            end
+
+        end
+        
+    end
+
+    return false
+end
+
 function confirmSecondRound()
-    -- Save round 1 player bag scores somewhere
-    -- Bags will need a new display for that and total score
+
+    removeConfirmButtons()
+
+
+    -- Save round 1 player bag scores
     -- Remove regular cards
     -- Remove discarded special cards
-    -- KEEP special cards in hand
+    -- KEEP special cards, in discard and in hand
     -- Spawn new numbers deck & deal
     -- Deal 3 more specials from EXISTING deck
 
 
-    -- Clear every card from the table except the special deck and special cards IN HANDs
+    -- Clear every card from the table except specials
+    -- Also don't delete bags/counters
+    -- This will prevent cards IN the bags getting destroyed too, so 
+    -- score will remain
     local allObjects = getAllObjects()
     for index, object in ipairs(allObjects) do
         if not (object.guid == numbersDeckGUID or 
@@ -315,10 +339,91 @@ function confirmSecondRound()
             object.guid == tableCardMarkerGUID or
             object.guid == adminMarkerGUID or
             object == currentSpecialDeck or
-            (object.hasTag("Special") and string.len(object.held_by_color) > 0)) then
+            object.hasTag("Special") or
+            object.hasTag("ScoreBag") or
+            object.hasTag("ScoreCounter")) then
             object.destruct()
         end
     end
+
+
+    -- Clone numbers deck, but not special
+    local numbersDeck = origNumbersDeck.clone({
+        position     = {-23, 3, 0},
+        snap_to_grid = true,
+    })
+
+    -- Do everything with a 1 second delay to make sure we wait for previous
+    delaySum = 0
+
+    -- shuffle both at the same time
+    Wait.time(function() numbersDeck.shuffle() end, delaySum)
+    delaySum = delaySum + 1
+
+    -- Deal to players; numbers and new specials (they're allowed to keep existing specials)
+    Wait.time(function() numbersDeck.deal(12) end, delaySum)
+    Wait.time(function() currentSpecialDeck.deal(3) end, delaySum)
+    delaySum = delaySum + 1
+
+    -- Order players hands
+    Wait.time(function() 
+        for _, colour in ipairs(getSeatedPlayers()) do 
+            local player = Player[colour]
+            print(colour .. " Hand Order")
+            local cardsInHand = player.getHandObjects()
+            
+            local hideCardsPos = cardsInHand[1].getPosition()
+            hideCardsPos.y = hideCardsPos.y - 5
+            table.sort(cardsInHand, function(l, r) 
+                -- special cards won't convert, sort those to end
+                local lnum = tonumber(l.getName())
+                local rnum = tonumber(r.getName())
+                if lnum == nil and rnum == nil then -- both specials
+                    return l.getName() < l.getName() -- must have stable ordering
+                else
+                    if lnum == nil then
+                        return false -- swap when special is to the left of non-special
+                    elseif rnum == nil then
+                        return true
+                    else
+                        return lnum < rnum
+                    end
+                end
+            end)
+
+            -- Iterating cardsInHand is not in index order because ffs lua only has maps
+            -- So iterate range and de-ref
+            for i=1,#cardsInHand do
+                local card = cardsInHand[i]
+                card.setPosition(hideCardsPos)
+            end
+            for i=1,#cardsInHand do
+                local card = cardsInHand[i]
+                Wait.time(function()
+                    card.deal(1, colour)
+                    end, i*0.2)
+                        
+            end
+        end
+    end, delaySum)
+
+    -- deal to table at same time
+	Wait.time(function()
+		local basePos = tableCardMarker.getPosition()
+		for i=1, 4 do
+			local pos = {basePos.x, basePos.y, basePos.z - i*3.46}
+            numbersDeck.takeObject({
+                position          = pos,
+                flip              = true
+            })
+        end
+	end, delaySum)
+
+    delaySum = delaySum + 0.2
+
+    -- delete the numbers deck now
+    Wait.time(function() numbersDeck.destruct() end, delaySum)
+
 
     
 end
@@ -369,6 +474,7 @@ end
 function playerScoreBagSpawned(bag, colour)
     bag.setName(colour .. "'s Scoring Bag")
     bag.setColorTint(colour)
+    bag.addTag("ScoreBag")
 
     local counterPos = bag.getPosition() + (bag.getTransformRight() * 3)
 
@@ -386,6 +492,7 @@ end
 function playerScoreCounterSpawned(counter, colour, bag)
     counter.Counter.clear()
     counter.setLock(true)
+    counter.addTag("ScoreCounter")
     bagsToCounterMap[bag.guid] = counter
 end
 
