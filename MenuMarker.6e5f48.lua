@@ -230,7 +230,8 @@ function resetAndDealNewGame()
 
     -- delete the remaining cloned decks, we don't need
     Wait.time(function() numbersDeck.destruct() end, delaySum)
-    Wait.time(function() specialDeck.destruct() end, delaySum)
+    --Don't delete the special deck, since you can switch cards when picking up
+    --Wait.time(function() specialDeck.destruct() end, delaySum)
     delaySum = delaySum + 0.2
 
 end
